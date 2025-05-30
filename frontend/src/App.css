@@ -58,15 +58,15 @@ ul{
   margin: 5px 0;
   font-size: 12px;
 
-  img{
+  img.avatar{
     border-radius: 50%;
     border: 1px solid #fff;
-    margin-right: 5px;
   }
 }
 .chat-history li span{
   align-items: center;
   display: inherit;
+  column-gap: 5px
 }
 .chat-history li:nth-child(odd) {
   justify-content: flex-end;
@@ -75,13 +75,19 @@ ul{
   
   span{
     flex-direction: row-reverse;
-    gap: 10px;
+  }
+}
+.chat-room{
+  display:flex;
+  input{
+    padding: 8px;
+  }
+  span{
+    align-items: center;
+    display: inherit;
   }
 }
 
-.chat-room input{
-  padding: 8px;
-}
 
 .chat-box{
   width:300px

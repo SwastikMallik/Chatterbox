@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
   socket.on('message', (data) => {
     console.log('Message received:', data);
     // Broadcast to everyone (including sender)
-    io.emit('message', `You said: ${data}`);
+    io.emit('message', data);
   });
 
   socket.on('disconnect', () => {

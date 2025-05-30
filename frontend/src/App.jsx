@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import ChatHistory from './components/ChatHistory';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
 import socket from './socket';
+import attachment from './assets/attachment.png'
 import './App.css';
 
 function App() {
@@ -10,6 +11,8 @@ function App() {
   const [input, setInput] = useState('');
   const inputRef = useRef(null);
   const [debouncedValue, setDebouncedValue] = useState(input);
+  const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   const getCurrentTimeIn24Format = () => {
     const now = new Date();
@@ -22,7 +25,6 @@ function App() {
   }
 
   useEffect(() => {
-    console.log(getCurrentTimeIn24Format)
     const handler = setTimeout(() => {
       setDebouncedValue(input);
     }, 200);
@@ -34,7 +36,7 @@ function App() {
     socket.on('message', (message) => {
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: message, sender: 'server', time: getCurrentTimeIn24Format() },
+        message, // Need to change the logic here for Input File
       ]);
     });
 
@@ -43,24 +45,86 @@ function App() {
     };
   }, []);
 
+  const handleUploadClick = () => {
+    console.log('in')
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // Opens file dialog
+    }
+  };
+  // Chat input handler
   const handleOnChange = (e) => setInput(e.target.value);
 
-  const sendMessage = (e) => {
-    e.preventDefault();
+  // Chat input file handler
+  const handleFileChange = (e) => {
+    const afile = e.target.files[0];
 
-    if (!debouncedValue.trim()) {
-      toast('Please add some text to send a message');
-      inputRef.current.focus();
+    if (!afile) return;
+
+    // Validate file type
+    if (!afile.type.startsWith('image/')) {
+      e.target.value = '';
+      toast.error('Only image files are allowed');
       return;
     }
 
-    socket.emit('message', debouncedValue);
-    setMessages((prev) => [
-      ...prev,
-      { text: debouncedValue, sender: 'client', time: getCurrentTimeIn24Format() },
-    ]);
-    setInput('');
+    // Validate file size (1MB = 1,000,000 bytes)
+    if (afile.size > 1000000) {
+      e.target.value = '';
+      toast.error('File size should be less than 1MB');
+      return;
+    }
+
+    // If valid
+    setFile(afile);
+    console.log(afile, "File accepted");
   };
+
+
+  //Form Submit
+  const sendMessage = (e) => {
+  e.preventDefault();
+
+  if (!debouncedValue.trim() && !file) {
+    toast('Please add some text to send a message');
+    //inputRef.current.focus();
+    return;
+  }
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const obj = {
+        text: debouncedValue,
+        file: {
+          name: file.name,
+          type: file.type,
+          data: reader.result, // base64
+        },
+        sender: 'client',
+        time: getCurrentTimeIn24Format(),
+      };
+
+      socket.emit('message', obj);
+      setMessages((prev) => [...prev, obj]);
+      setInput('');
+      setFile(null);
+    };
+
+    reader.readAsDataURL(file); // use readAsDataURL for base64 images
+  } else {
+    const obj = {
+      text: debouncedValue,
+      sender: 'client',
+      time: getCurrentTimeIn24Format(),
+    };
+
+    socket.emit('message', obj);
+    setMessages((prev) => [...prev, obj]);
+    setInput('');
+    fileInputRef.current.value = '';
+  }
+};
+
 
   return (
     <div className="chat-box">
@@ -80,6 +144,14 @@ function App() {
         />
       <ChatHistory messages={messages}/>
       <form className="chat-room" onSubmit={sendMessage}>
+        <span onClick={handleUploadClick}><img src={attachment} alt="attachment"/></span>
+        <input 
+          type="file"
+          accept="image/*" 
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
         <input
           type="text"
           value={input}
@@ -87,7 +159,8 @@ function App() {
           onChange={handleOnChange}
           placeholder='Say Hello'
         />
-        <button>Send</button>
+
+        <button type="submit">Send</button>
       </form>
     </div>
   );
