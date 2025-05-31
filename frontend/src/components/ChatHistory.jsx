@@ -9,7 +9,7 @@ console.log(messages, "messages")
     return (
         <ul className="chat-history">
           { messages.map((message, index) => (
-              <li key={index}>
+              <li key={index} className={message.sender}>
                 <span>
                   <img className="avatar" src={message.sender === 'server' ? robot : human } alt="robot" /> 
                   <p>{message.text}</p>

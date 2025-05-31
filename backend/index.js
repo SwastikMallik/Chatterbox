@@ -49,5 +49,4 @@ app.use(cors({
 
 server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-    //console.log(`📝 API Documentation available at http://localhost:${PORT}/api-docs`);
 });

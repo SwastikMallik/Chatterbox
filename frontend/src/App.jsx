@@ -34,9 +34,11 @@ function App() {
 
   useEffect(() => {
     socket.on('message', (message) => {
+      message.sender = 'server'
+      console.log(message, "server response")
       setMessages((prevMessages) => [
         ...prevMessages,
-        message, // Need to change the logic here for Input File
+        message
       ]);
     });
 

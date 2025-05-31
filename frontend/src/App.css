@@ -68,7 +68,7 @@ ul{
   display: inherit;
   column-gap: 5px
 }
-.chat-history li:nth-child(odd) {
+.chat-history li.client {
   justify-content: flex-end;
   background-color: #888;
   color: black;
