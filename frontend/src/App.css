@@ -48,6 +48,8 @@ ul{
 .chat-history {
   list-style: none;
   padding: 0;
+  max-height: 600px;
+  overflow: auto;
 }
 
 .chat-history li {
