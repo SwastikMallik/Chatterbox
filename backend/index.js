@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require("socket.io")
+const formatResponse = require('./utils/responseFormatter');
 
 const app = express();
 // Create HTTP server from Express app
@@ -18,16 +19,42 @@ const io = new Server(server,  {
 
 
 // Now you can use 'io' to listen for connections
-io.on('connection', (socket) => {
+io.on('connection', (socket) => { // its a socket monitoring feature
   console.log('Client connected');
   console.log('Socket ID', socket.id)
 
   socket.on('message', (data) => {
     console.log('Message received:', data);
-    const { text } = data;
+    const { text, sender, file } = data;
+
+    // Error Handling
+    const error = {}
+    if(!text && !file){
+      error.text = 'Please enter a message'
+    }
+    
+    if(Object.keys(error).length > 0){
+      const errorResponse = formatResponse({
+        success: false,
+        message: 'Validation Error',
+        error: error,
+      })
+      socket.emit('message', errorResponse);
+      return
+    }
+          
     data.text = `You Said: ${text}`
-    // Broadcast to everyone (including sender)
-    io.emit('message', data);
+    data.sender = 'server'
+
+    // On success
+    const successResponse = formatResponse({
+      success: true,
+      message: 'Message sent successfully',
+      data: data
+    });
+
+    //Send to the connected socket onlys
+    socket.emit('message', successResponse);
   });
 
   socket.on('disconnect', () => {

@@ -13,6 +13,7 @@ function App() {
   const [debouncedValue, setDebouncedValue] = useState(input);
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
+  const [ validationError, setValidationError ] = useState({});
 
   const getCurrentTimeIn24Format = () => {
     const now = new Date();
@@ -33,20 +34,29 @@ function App() {
   }, [input]);
 
   useEffect(() => {
-    socket.on('message', (message) => {
-      message.sender = 'server'
-      console.log(message, "server response")
-      setMessages((prevMessages) => [
+    socket.on('message', ({success, message, error, data}) => {
+      console.log(success, "client response")
+      console.log(error, "client response error")
+      if(success){
+        setMessages((prevMessages) => [
         ...prevMessages,
-        message
-      ]);
-    });
+        data
+      ])
+      } else {
+        toast.error(message)
+        setValidationError(error)
+        console.log("Error In")
+      }
+    })
 
     return () => {
       socket.off('message');
     };
-  }, []);
+  }, [])
 
+  console.log(validationError, "Print error")
+
+  //Triggered the input type file (hidden), when user clicks on attachment image
   const handleUploadClick = () => {
     console.log('in')
     if (fileInputRef.current) {
@@ -54,10 +64,14 @@ function App() {
     }
   };
   // Chat input handler
-  const handleOnChange = (e) => setInput(e.target.value);
+  const handleOnChange = (e) => {
+    setInput(e.target.value); 
+    setValidationError({})
+  }
 
   // Chat input file handler
   const handleFileChange = (e) => {
+    setValidationError({})
     const afile = e.target.files[0];
 
     if (!afile) return;
@@ -110,6 +124,7 @@ function App() {
       setMessages((prev) => [...prev, obj]);
       setInput('');
       setFile(null);
+      fileInputRef.current.value = '';
     };
 
     reader.readAsDataURL(file); // use readAsDataURL for base64 images
@@ -164,6 +179,7 @@ function App() {
 
         <button type="submit">Send</button>
       </form>
+      { validationError.text && <p>{validationError.text}</p> }
     </div>
   );
 }
